@@ -215,8 +215,9 @@ sudo systemctl enable docker
 https://192.168.50.117:9443/#!/init/admin
 
 ### 用户密码
-admin
-!FbBY4^sW8rJffzN
+https://192.168.50.51:9443/#!/2/docker/dashboard
+
+jH2U6s7s!^ZcYW7R
 
 
 ### 看一下网络咯
@@ -273,3 +274,56 @@ export PS1="\[\e[32m\][\[\e[m\]\[\e[31m\]\u\[\e[m\]\[\e[33m\]@\[\e[m\]\[\e[32m\]
 
 因为从这里面打开容器的时候可又是绿色的了
 
+### 就无语
+
+https://stackoverflow.com/questions/39374557/mac-os-x-route-gateway-link5
+
+	Destination        Gateway            Flags           Netif Expire
+	default            192.168.50.1       UGScg             en0
+	127                127.0.0.1          UCS               lo0
+	127.0.0.1          127.0.0.1          UH                lo0
+	169.254            link#6             UCS               en0      !
+	192.168.50         link#6             UCS               en0      !
+	192.168.50.1/32    link#6             UCS               en0      !
+	192.168.50.1       b0:6e:bf:28:92:c0  UHLWIir           en0   1199
+	192.168.50.84/32   link#6             UCS               en0      !
+	192.168.50.117     8:0:27:cf:27:bb    UHLWI             en0    503
+	192.168.50.138     38:f9:d3:1a:72:78  UHLWIi            en0    629
+	192.168.50.188     7a:eb:3e:16:cf:6b  UHLWIi            en0   1010
+	192.168.50.233     90:9:d0:d:e7:ed    UHLWIi            en0    965
+	192.168.50.238     8c:aa:b5:6d:fd:34  UHLWI             en0   1200
+	224.0.0/4          link#6             UmCS              en0      !
+	224.0.0.251        1:0:5e:0:0:fb      UHmLWI            en0
+	239.255.255.250    1:0:5e:7f:ff:fa    UHmLWI            en0
+	255.255.255.255/32 link#6             UCS               en0      !
+
+netstat -nr
+
+第六个就是ifconfig数出来的第六个，就是en0
+
+	[vagrant@fedora36:~]$ route -n
+	Kernel IP routing table
+	Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+	0.0.0.0         192.168.50.1    0.0.0.0         UG    0      0        0 eth1
+	10.0.2.0        0.0.0.0         255.255.255.0   U     101    0        0 eth0
+	172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
+	192.168.50.0    0.0.0.0         255.255.255.0   U     0      0        0 eth1
+
+这边是用route -n
+
+https://unix.stackexchange.com/questions/94018/what-is-the-meaning-of-0-0-0-0-as-a-gateway#:~:text=Therefore%2C%200.0.,interface%20to%20reach%20that%20router.
+
+sudo route del -net 192.168.50.0 gw 0.0.0.0 netmask 255.255.255.0 dev eth1
+
+ip route add 192.168.50.0/24 via 192.168.50.1 dev eth1
+
+ip route add 192.168.50.1 dev eth1
+ip route add default via 192.168.50.1
+
+arp -s 192.168.50.1 -i eth1 b0:6e:bf:28:92:c0
+arp -s _gateway -i eth1 b0:6e:bf:28:92:c0
+
+
+38:F9:D3:9D:5A:D2
+
+git config --global http.proxy http://192.168.50.232:13128

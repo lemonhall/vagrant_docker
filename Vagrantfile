@@ -33,16 +33,30 @@ Vagrant.configure("2") do |config|
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   # config.vm.network "private_network", ip: "192.168.33.10"
+  # config.vm.network :private_network, ip: "192.168.56.10"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
   # your network.
-  config.vm.network "public_network",auto_config: false,bridge: "en0: Wi-Fi"
+  # config.vm.network "public_network",auto_config: false,bridge: "en0: Wi-Fi"
+  # config.vm.network "public_network",bridge: "bridge0"
+  #config.vm.network "public_network",bridge: "en0: Wi-Fi",ip:"192.168.50.118"
+  config.vm.network "public_network"
 
-  # manual ip
-  config.vm.provision "shell",
-    run: "always",
-    inline: "ifconfig eth1 192.168.50.117 netmask 255.255.255.0 up"
+  # # manual ip
+  # config.vm.provision "shell",
+  #   run: "always",
+  #   inline: "ifconfig eth1 192.168.50.117 netmask 255.255.255.0 up"
+
+  # # default router
+  # config.vm.provision "shell",
+  #   run: "always",
+  #   inline: "route add default gw 192.168.50.1"
+
+  # # delete default gw on eth0
+  #  config.vm.provision "shell",
+  #   run: "always",
+  #   inline: "eval `route -n | awk '{ if ($8 ==\"eth0\" && $2 != \"0.0.0.0\") print \"route del default gw \" $2; }'`"
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
