@@ -339,3 +339,10 @@ git config --global http.proxy http://192.168.50.232:13128
 ### 切记一件事
 
 就是这个vagrant如果要用网桥的话，必须走有线网络，wifi有bug
+
+### 最后删除默认路由
+
+  # default router
+  config.vm.provision "shell",
+    run: "always",
+    inline: "ip route del default via 10.0.2.2 || true"
