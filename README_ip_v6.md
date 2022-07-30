@@ -1,3 +1,8 @@
+<img width="1160" alt="image" src="https://user-images.githubusercontent.com/637919/181862526-44b3c370-b190-4b3e-abb7-93d943936432.png">
+![image](https://user-images.githubusercontent.com/637919/181862535-97ac8add-9526-43bd-a5ad-9cb13fc341a3.png)
+![image](https://user-images.githubusercontent.com/637919/181862545-8ed520c4-6850-49f4-bb7e-a69690660228.png)
+
+
 ### 参考资料
 https://www.csdn.net/tags/MtTaMg4sMDQwMDQxLWJsb2cO0O0O.html
 
@@ -392,6 +397,49 @@ sudo route del default gw 10.0.2.2 eth0
 
 本来这个可以在vagranfile里解决的，行吧
 
+然后容器网络正常了
+
+
+最终总结
+=======
+
+https://github.com/lemonhall/vagrant_docker/blob/main/README_ip_v6.md
+将近20个小时的瞎折腾
+结果最后其实非常简单
+
+一台物理机，一个虚拟机（vagrant管理的fedora36），一个docker，一个物理的路由
+1、拿地址
+让Host宿主机要有一个与物理路由器同网段的地址，这样，它才能被路由器get到
+方法是，桥接网络，vm里面的，桥接把我坑了4-5个小时的地方其实就一个
+【vb的桥接，对wifi的那个nic支持不好，具体原因可以深化】
+所以，你需要一个有限cable的网络nic去桥接
+好了，这样host就拿到一个192.168.50.xxx的ip地址了，可以在路由器里看到它了
+2、配路由
+每一个Host机器上的容器，其实都可以有一个子网，比如172.18.xx.xx,255.255.0.0
+那么，不需要去看网上大多数流传的那种静态路由的配置方式，因为那样的话，每台主机都要配静态路由表，太累了，路由器有这个功能的
+如下，有几个主机，配置几个子网就行了，把host主机视为一个路由器就可以理解了
+3、主机上侦听
+sudo tcpdump -n -i any icmp
+这一步卡了我很久
+就看了好多文章，静下心来还看了很多docker默认的iptables的规则问题，等等等等
+我的问题在于，清空了iptables之后，还是只能ping 成功 docker0的那个172.17.0.1
+最后忽然用tcpdump一层层排查后才意识到，还是有什么东西挡着我
+sudo systemctl disable --now firewalld
+最后才明白，fedora和centos最新的版本做了一个新的防火墙，干掉就完了，内网搞这些干啥
+4、最后成功
+5、遗留
+似乎访问外网不成功，稍后看一下怎么回事
+===========
+容器里面出不去
+1、vagrant的网络配置里，其实可以把默认路由干掉
+2、可以给docker0上加路由规则
+sudo route add -n 0.0.0.0/24 gw 192.168.50.1 dev docker0
+sudo route add default gw 192.168.50.1 docker0
+给docker0加不上这个路由啊
+算了
+sudo route del default gw 10.0.2.2 eth0
+删掉eth0那个碍事的路由也行
+本来这个可以在vagranfile里解决的，行吧
 然后容器网络正常了
 
 
