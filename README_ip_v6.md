@@ -445,6 +445,10 @@ sudo route del default gw 10.0.2.2 eth0
 然后容器网络正常了
 
 
+### 删默认路由
 
-
+  # default router
+  config.vm.provision "shell",
+    run: "always",
+    inline: "ip route del default via 10.0.2.2 || true"
 
