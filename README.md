@@ -1,5 +1,8 @@
 <img width="1439" alt="image" src="https://user-images.githubusercontent.com/637919/181657954-36c8403f-e74e-4d97-b795-5ee72df6f803.png">
+
 <img width="1194" alt="image" src="https://user-images.githubusercontent.com/637919/181657991-ce4a9d5a-f247-4986-9ce3-ab88b16111ce.png">
+
+<img width="1160" alt="image" src="https://user-images.githubusercontent.com/637919/181862526-44b3c370-b190-4b3e-abb7-93d943936432.png">
 
 
 ### 参考资料：
@@ -331,3 +334,8 @@ arp -s _gateway -i eth1 b0:6e:bf:28:92:c0
 38:F9:D3:9D:5A:D2
 
 git config --global http.proxy http://192.168.50.232:13128
+
+
+### 切记一件事
+
+就是这个vagrant如果要用网桥的话，必须走有线网络，wifi有bug
