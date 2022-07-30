@@ -89,3 +89,12 @@ sudo docker login
 
 容器里，ping 192.168.50.46
 其它的物理机器，都是通畅的，自此，裸机配置完毕
+
+![image](https://user-images.githubusercontent.com/637919/181918956-b6a28238-9079-4656-a168-16c70da3d523.png)
+
+https://172.16.200.2:9443/
+
+jH2U6s7s!^ZcYW7R
+
+告别端口转发的痛苦
+
