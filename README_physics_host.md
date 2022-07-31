@@ -568,9 +568,10 @@ route -A inet6 add 240e:03b4:303b:5830:1000::/68 gw 240e:3b4:303b:5830:d176:3e26
 
 因为，物理机的ipv6地址彻底变了
 
-新地址是240e:3b4:303c:9790:18fe:fda0:9fcf:271c/64
+新地址是
+240e:3b4:303c:9790:18fe:fda0:9fcf:271c/64
 
-https://www.calculator.net/ip-subnet-calculator.html
+http://www.gestioip.net/cgi-bin/subnet_calculator.cgi
 
 我使用它来计算一下
 
@@ -637,6 +638,375 @@ b的话，需要重启docker之后，也有东西能够去触发这个脚本，�
 c，相对来说其实还好，有之前nas上的脚本的经验可以借鉴
 
 配置三个动态的东西就可以了，OK
+
+拆解那个脚本
+==========
+
+	[lemonhall@fedora36-macbook ~]$ command --help
+	command: command [-pVv] 命令 [参数 ...]
+	    执行一个简单命令或者显示命令的相关信息。
+
+	    带 ARGS 参数运行 COMMAND 命令且抑制 shell 函数查询，或显示
+	    指定的 COMMAND 命令的信息。可以在存在相同名称的函数定义的
+	    情况下用于启动磁盘上的命令。
+
+	    选项：
+	      -p	使用 PATH 变量的一个默认值以确保所有的标准工具都能被找到。
+	      -v	打印 COMMAND 命令的描述，和 `type' 内建相似
+	      -V	打印每个 COMMAND 命令的详细描述
+
+	    退出状态
+	    返回 COMMAND 命令的返回状态，或者当找不到 COMMAND 命令时失败。
+	[lemonhall@fedora36-macbook ~]$ command -v sipcalc
+	/usr/bin/sipcalc
+	[lemonhall@fedora36-macbook ~]$
+
+
+sipcalc -s 255.255.255.254 -I wlp3s0
+
+-[int-ipv4 : wlp3s0] - 0
+
+[Split network]
+Network			- 192.168.50.0    - 192.168.50.1
+Network			- 192.168.50.2    - 192.168.50.3
+Network			- 192.168.50.4    - 192.168.50.5
+Network			- 192.168.50.6    - 192.168.50.7
+Network			- 192.168.50.8    - 192.168.50.9
+Network			- 192.168.50.10   - 192.168.50.11
+Network			- 192.168.50.12   - 192.168.50.13
+Network			- 192.168.50.14   - 192.168.50.15
+Network			- 192.168.50.16   - 192.168.50.17
+Network			- 192.168.50.18   - 192.168.50.19
+
+这是ipv4的输出，我倒是大概明白了
+
+https://docs.netgate.com/pfsense/en/latest/network/ipv6/subnets.html
+
+阿西吧，用python吧
+
+安装pip
+
+https://pypi.org/project/subnet-utils/
+
+sudo dnf install python3-pip
+
+安装工具包
+pip install subnet-utils
+（这里可能有权限的坑，要注意一下）
+
+network-divide 240e:3b4:303c:9790:18fe:fda0:9fcf:271c/64 16
+
+[lemonhall@fedora36-macbook ~]$ network-divide 240e:3b4:303c:9790:18fe:fda0:9fcf:271c/64 16
+
+CIDR:       240e:3b4:303c:9790::/68
+Netmask:    ffff:ffff:ffff:ffff:f000::
+Network:    240e:3b4:303c:9790::
+Host Count: 1152921504606846976
+
+CIDR:       240e:3b4:303c:9790:1000::/68
+Netmask:    ffff:ffff:ffff:ffff:f000::
+Network:    240e:3b4:303c:9790:1000::
+Host Count: 1152921504606846976
+
+CIDR:       240e:3b4:303c:9790:2000::/68
+Netmask:    ffff:ffff:ffff:ffff:f000::
+Network:    240e:3b4:303c:9790:2000::
+Host Count: 1152921504606846976
+
+CIDR:       240e:3b4:303c:9790:3000::/68
+Netmask:    ffff:ffff:ffff:ffff:f000::
+Network:    240e:3b4:303c:9790:3000::
+Host Count: 1152921504606846976
+
+CIDR:       240e:3b4:303c:9790:4000::/68
+Netmask:    ffff:ffff:ffff:ffff:f000::
+Network:    240e:3b4:303c:9790:4000::
+Host Count: 1152921504606846976
+
+emmm，这个输出我很喜欢
+
+
+自己写了一个python脚本，来计算,write_prefix.py
+
+运行后得到想要的那个输出
+
+240e:3b4:303c:9790:1000::/68
+
+他妈的，真心烦
+
+我认为你可以通过虚拟环境得到你所需要的
+
+您需要专门为该脚本创建一个虚拟环境。您将在该环境中使用正确的版本安装所需的所有软件包。只要在虚拟环境处于活动状态的情况下运行脚本，一切都将可用。-请参阅venv documenttion here
+
+要创建虚拟环境，请运行python3 -m venv <your_venv_path>，路径为要存储虚拟环境的位置，例如~/.venvs/my_project/
+
+要安装软件包，首先必须使其处于活动状态，然后运行pip
+
+source <your_venv_path>/bin/activate
+pip install png_util
+到这里，您将准备好虚拟环境并安装软件包。如果在虚拟环境处于活动状态的情况下运行脚本，则包将可用
+
+现在，因为您的脚本是一个守护进程this is how you make sure it runs within your virtual environment。基本上，虚拟环境在中创建一个Python副本，您只需在脚本中添加使用该Python“副本”的指令。只需添加#!<your_venv_path>/bin/python作为脚本的第一行即可
+
+这样，当脚本运行时，它确实会在安装了所有软件包的虚拟环境中运行
+
+PS：通过简单地以sudo的形式运行pip，可能所有东西都可以工作，因为它将在系统范围内安装软件包，使其可供所有用户使用。但是，由于它所造成的安全风险，这种选择是非常不受欢迎的，请参见此post with security risks of running sudo pip
+
+希望这有帮助
+
+搞定环境
+====
+
+mkdir ~/.venvs
+mkdir ~/.venvs/docker
+
+python3 -m venv ~/.venvs/docker
+source ~/.venvs/docker/bin/activate
+
+pip install subnet-utils
+
+#!/root/.venvs/docker/bin/python
+
+给python最上方加入这个就ok
+
+然后chmod +x 给 脚本
+
+sudo 执行就重启docker了
+
+噢噢噢噢~~~
+
+/home/lemonhall/docker/check_prefix_change.py
+
+Docker IPv6 hook
+The docker-ipv6 dhclient hook in this repository should be placed in /etc/dhcp/dhclient-enter-hooks.d/ where it will be executed after dhclient obtains a prefix.
+
+The hook will get the first /80 subnet out of the delegated prefix and write it to /etc/docker/ipv6.prefix
+
+The Docker daemon is then restarted so it will use the new subnet as the fixed IPv6 cidr.
+
+Depending on your Ubuntu version (14.04 or 16.04) configuration has to be done differently due to the Upstart vs systemd changes. The end result is the same.
+
+Afterwards you can print the processlist and see docker running with these arguments:
+
+/usr/bin/docker daemon --ipv6 --fixed-cidr-v6=2001:00db8:100:0000:0000:0000:0000:0000/80
+
+把我的两个文件copy过来
+
+https://netbeez.net/blog/linux-dhcp-hooks-network-engineers/
+
+OOO，我说呢
+
+Variables
+When a script is called by dhclient or dhcpcd, it has certain environment variables that are set by the hook mechanism. These variables hold values that have to do with how the network host is configured. To a certain extent the variable names are the same between dhclient and dhcpcd. This is very convenient if you are migrating from dhclient to dhcpcd or transferring scripts from one to the other. You might be able to use the same scripts without modifications – but always be sure to verify before you make the switch.
+
+原来这个脚本里面的变量是来自于环境变量啊
+
+好嘛
+
+sudo systemctl status dhclient6-pd
+
+好嘛~，根本就没有触发过的样子，我最担心的事情来了
+
+这种机制的脚本不太好调试，说实话
+
+总结一下
+======
+
+1、不需要静态路由
+
+2、需要ndppd这个东西
+
+3、需要在dhcp变化的时候有触发器，现在卡在这里了，脚本已经写好了，手动执行可以很好的重启docker了
+
+4、还需要处理ndppd这玩意呢
+
+5、最后还有每个docker里面需要定时上报AAAA记录的脚本呢
+
+哎，别看事很不大，这一个个写起来，还挺费事了
+
+6、处理ssl证书。。。
+
+dhclient -6 -P -d wlp3s0
+
+dhclient6-pd.service
+
+	[Unit]
+	Description=DHCPv6 Prefix Delegation client
+	Wants=network.target network-online.target
+	After=network.target network-online.target
+
+	[Service]
+	Type=simple
+	Environment=NETWORK_INTERFACE=wlp3s0
+	ExecStart=/sbin/dhclient -6 -P -d ${NETWORK_INTERFACE}
+	Restart=always
+	RestartSec=10s
+
+	[Install]
+	WantedBy=multi-user.target
+
+cd /etc/systemd/system/
+sudo vim dhclient6-pd.service
+
+sudo systemctl daemon-reload
+sudo systemctl start dhclient6-pd
+sudo systemctl enable dhclient6-pd
+
+闹心啊，
+
+https://opensource.com/article/20/7/systemd-timers
+
+# This service unit is for testing timer units
+# By David Both
+# Licensed under GPL V2
+#
+
+[Unit]
+Description=Logs system statistics to the systemd journal
+Wants=myMonitor.timer
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/free
+
+[Install]
+WantedBy=multi-user.target
+
+# This timer unit is for testing
+# By David Both
+# Licensed under GPL V2
+#
+
+[Unit]
+Description=Logs some system statistics to the systemd journal
+Requires=myMonitor.service
+
+[Timer]
+Unit=myMonitor.service
+OnCalendar=*-*-* *:*:00
+
+[Install]
+WantedBy=timers.target
+
+
+放弃了
+====
+https://fedoramagazine.org/scheduling-tasks-with-cron/
+
+
+dnf install cronie
+
+crontab -e
+
+	*/1 * * * * /etc/dhcp/dhclient-enter-hooks
+
+
+systemctl start crond.service
+
+		#!/bin/bash
+		cd /etc/dhcp
+		date >> log.txt
+		source ~/.venvs/docker/bin/activate
+		python check.py
+
+脚本里面写四句话就好了，就每分钟检查一下吧，累了，毁灭吧
+
+sudo systemctl restart ndppd
+
+vim ndppd.conf
+
+   rule
+
+替换
+
+import fileinput
+
+filename = "/etc/ndppd.conf"
+
+with fileinput.FileInput(filename, inplace = True, backup ='.bak') as f:
+    for line in f:
+        if("   rule" in line):
+            print("   rule "+" new_ip "+"{", end ='\n')
+        else:
+            print(line, end='')
+
+ sudo systemctl status ndppd
+
+最后终于搞定了
+===========
+
+1、新建一个shell文件
+#!/bin/bash
+
+# For dhclient/dhclient-script debugging.
+# Copy this into /etc/dhcp/ and make it executable.
+# Run 'dhclient -d <interface>' to see info passed from dhclient to dhclient-script.
+# See also HOOKS section in dhclient-script(8) man page.
+
+cd /etc/dhcp
+
+date >> log.txt
+
+source ~/.venvs/docker/bin/activate
+
+python check.py > env.log
+
+其实就是初始化python的环境，以及打日志出来；
+
+2、然后是
+check.py
+写的我差点怀疑人生
+结果发现是crontab启动下的python下的os.system类的命令
+
+无法继承当前的PATH，所以
+        ipv6 = os.popen("/usr/sbin/ip addr show wlp3s0 | /usr/bin/grep '\<inet6\>' | /usr/bin/head -n1 | /usr/bin/awk '{ print $2 }' | /usr/bin/awk -F '/' '{ print $1 }'").read().strip()
+
+ 真是一行行的打印最后定位到的错误
+
+3、初始化python环境就不多说啥了
+mkdir ~/.venvs
+mkdir ~/.venvs/docker
+
+python3 -m venv ~/.venvs/docker
+source ~/.venvs/docker/bin/activate
+
+pip install subnet-utils
+
+#!/root/.venvs/docker/bin/python
+
+4、安装成crontab，记得是sudo su
+
+https://fedoramagazine.org/scheduling-tasks-with-cron/
+
+
+dnf install cronie
+
+crontab -e
+
+	*/1 * * * * /etc/dhcp/dhclient-enter-hooks
+
+
+
+好了，以上就是，四步曲，完成
+
+检测新的ip和老的ip之间是否有差异，有差异就修改docker的daemon.json和ndppd.conf两个文件
+
+将计算好的新的网段地址，都更新到配置文件
+
+并且重启两个服务
+
+稍后开始写ddns更新AAAA记录的脚本
+
+这个写完了以后系统就会聪明许多了
+
+https://172.16.200.2:9443/
+
+jH2U6s7s!^ZcYW7R
+
+
+
+
+
 
 
 
