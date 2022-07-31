@@ -555,4 +555,88 @@ https://docker.lemonhall.me:9443/#!/home
 找到系统代理服务设置
 
 把
-*.lemonhall.me配置进去，不要走默认的代理服务，oh，yeah~~~~，成功咯~~~
+* [*.lemonhall.me配置进去，不要走默认的代理服务，oh，yeah，成功咯]
+
+
+问题
+===
+
+1、这个东西过于动态化了，很烦人
+
+2、我重启了路由器，你看，刚才写得那条静态路由就没有用了
+route -A inet6 add 240e:03b4:303b:5830:1000::/68 gw 240e:3b4:303b:5830:d176:3e26:24e:1de0 dev br0
+
+因为，物理机的ipv6地址彻底变了
+
+新地址是240e:3b4:303c:9790:18fe:fda0:9fcf:271c/64
+
+https://www.calculator.net/ip-subnet-calculator.html
+
+我使用它来计算一下
+
+切成16个子网
+
+240e:03b4:303c:9790:1000::/68
+
+我选了第一个
+
+更新docker的配置
+
+sudo vim /etc/docker/daemon.json
+
+重启
+
+sudo systemctl restart docker
+
+jH2U6s7s!^ZcYW7R
+
+容器看一下新的地址：240e:3b4:303c:9790:1000:242:ac10:c802
+
+更新一下dns记录到
+240e:3b4:303c:9790:1000:242:ac10:c802
+
+其它机器上ping
+ping6 docker.lemonhall.me
+
+ping不通
+
+哦，我又忘了
+sudo vim /etc/ndppd.conf
+更新ndppd的配置
+
+rules 到 240e:03b4:303c:9790:1000::/68
+
+sudo systemctl restart ndppd
+
+好了，ping通了，可以访问了，内网
+
+ip138.com使用手机的网络给笔记本
+
+https://docker.lemonhall.me:9443/
+
+您的iP地址是：[183.46.44.5 ] 来自：中国广东 电信
+
+哎呦，也就是说，路由器的静态地址配置都不需要了，这个好啊；
+
+现在看有几个动态需要配置的点
+=======================
+
+a. docker里面那个daemon.json里，网桥网络对应的这个ipv6的网段是必须指定的，这个有点烦
+
+b. 这个网段的配置值，也需要更新到ndppd的配置文件里面并且重启
+
+c. 在docker的容器里面，需要再重启之后，去主动更新dns里的AAAA记录
+
+
+a.b 其实就是[docker-ipv6](https://github.com/wido/docker-ipv6/) 这个项目要达成的
+
+但可惜，这个项目太老了，有一些东西需要更新一下
+
+b的话，需要重启docker之后，也有东西能够去触发这个脚本，这个再说
+
+c，相对来说其实还好，有之前nas上的脚本的经验可以借鉴
+
+配置三个动态的东西就可以了，OK
+
+
+
